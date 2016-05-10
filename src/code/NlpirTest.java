@@ -68,7 +68,7 @@ public class NlpirTest {
 			CLibrary.Instance.NLPIR_AddUserWord("插桩 v");
 			CLibrary.Instance.NLPIR_AddUserWord("大气机 n");
 			CLibrary.Instance.NLPIR_AddUserWord("引脚 n");
-			nativeBytes = CLibrary.Instance.NLPIR_ParagraphProcess(sInput, 1);
+			nativeBytes = CLibrary.Instance.NLPIR_ParagraphProcess(sInput, 0);
 			System.out.println("增加用户词典后分词结果为： " + nativeBytes);
 //
 //			CLibrary.Instance.NLPIR_DelUsrWord("要求美方加强对输");
