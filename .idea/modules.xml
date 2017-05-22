@@ -3,6 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/JnaTest_V1.iml" filepath="$PROJECT_DIR$/JnaTest_V1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../ga.iml" filepath="$PROJECT_DIR$/../../ga.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../knn/knn.iml" filepath="$PROJECT_DIR$/../../knn/knn.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../tbsearch/tbsearch.iml" filepath="$PROJECT_DIR$/../../tbsearch/tbsearch.iml" />
     </modules>
   </component>
 </project>

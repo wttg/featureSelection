@@ -3,11 +3,14 @@ import java.io.*;
 
 import java.util.*;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 
 public class TFIDFTEST{
-    static String path = "E:\\训练集\\train\\";
-    static String  vsmpath = "E:\\训练集\\vsm\\vsm.txt";
+    static String path = "D:\\test\\";
+    static String  vsmpath = "D:\\save\\save.txt";
     //static String path = "E:\\训练集\\SogouC.reduced\\Reduced";
     // static String path ="E:\\训练集\\SogouC.mini\\Sample";
     static Map<String, Map<String, Double>> DFdic = new HashMap();
@@ -17,6 +20,8 @@ public class TFIDFTEST{
     static      Map<String, Map<String,Double>> TFIDFdic = new HashMap();
     // static Map<String,List<String>> Simpledic= new HashMap();
     public static void main(String[] args) throws IOException {
+
+
 
         TFIDFTEST tf = new TFIDFTEST();
         File[] Filelist = tf.readData(path);
@@ -52,7 +57,9 @@ public class TFIDFTEST{
         for (int i = 0; i < fileList.length; i++) {
             File f = fileList[i];
             //System.out.println(f.getPath());
-            String[] textword = cutWord(FiletoText(f.getPath()));
+            String test = FiletoText(f.getPath());
+            System.out.println("wttg:"+test);
+            String[] textword = cutWord(test);
             Map tf = computeTf(textword);
             DFdic.put(f.getPath(), tf);
             addDic(f.getPath(), tf);
@@ -77,22 +84,57 @@ public class TFIDFTEST{
 
     }
 
-    public String FiletoText(String path) throws IOException {
+    public static String FiletoText(String path) throws IOException {
         File f = new File(path);
         BufferedReader br = new BufferedReader(new InputStreamReader(
                 new FileInputStream(f), "GB2312"));
         String result = "";
         String temp;
-        while ((temp = br.readLine()) != null) {
-            result = result + temp;
+        if(path == "data/stopWords.txt"||path =="E:\\wttg\\map.txt") {
+            while ((temp = br.readLine()) != null) {
+                result = result + temp+" ";
+            }
         }
+        else{
+            while ((temp = br.readLine()) != null) {
+                result = result + temp;
+            }
+        }
+
         br.close();
         return result;
     }
 
+    public static String FiletoString(String path) throws IOException {
+        File f = new File(path);
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                new FileInputStream(f), "utf-8"));
+        String result = "";
+        String temp;
+
+        while ((temp = br.readLine()) != null) {
+            result = result + temp+" ";
+        }
+
+
+
+        br.close();
+        return result;
+    }
+
+    public static boolean isContainChinese(String str) {
+
+        Pattern p = Pattern.compile("[\u4e00-\u9fa5]");
+        Matcher m = p.matcher(str);
+        if (m.find()) {
+            return true;
+        }
+        return false;
+    }
+
     public String[] cutWord(String text) throws IOException {
 
-        String[] result = text.split("\\|");
+        String[] result = text.split(" ");
         /*
          * for(String s :result ) { System.out.println(s); }
          */
@@ -128,6 +170,51 @@ public class TFIDFTEST{
         return result;
 
     }
+    public static List<Double> computeSigleTf(List<String> wordList,String []textWord){
+        List<Double> TFValue = new ArrayList<>();
+        List<Integer> TFCount = new ArrayList<>();
+
+        for (int i = 0; i < wordList.size(); i++) {
+            int count = 0;
+            for (int j = 0; j < textWord.length; j++) {
+                if (textWord[j].equals(wordList.get(i))) {
+                    count++;
+                }
+            }
+            TFCount.add(count);
+        }
+        for (int i = 0; i < wordList.size(); i++) {
+            TFValue.add((double) TFCount.get(i)/textWord.length);
+        }
+
+        return TFValue;
+
+    }
+    public static List<Double> computeSigleIdf(List<String> wordList,String path) throws  Exception{
+        List<Double> IDFValue = new ArrayList<>();
+        List<Integer> IDFCount = new ArrayList<>();
+        File[] files = TFIDF.getAllFile(path);
+        for (int i = 0; i < wordList.size(); i++) {//遍历词库
+            int count = 0;
+            for (int j = 0; j < files.length; j++) {//遍历文件
+                File f = files[j];
+                String test = TFIDFTEST.FiletoString(f.getPath());
+                String []testWord = test.split(" ");
+                for (int k = 0; k < testWord.length; k++) {//遍历文件每个词
+                    if (testWord[k].equals(wordList.get(i))) {
+                        count++;
+                        break;
+                    }
+                }
+            }
+            IDFCount.add(count);
+        }
+
+        for (int i = 0; i < wordList.size(); i++) {
+            IDFValue.add(Math.log((double) (2716/(IDFCount.get(i)+1))));
+        }
+        return IDFValue;
+    }
 
     public void addDic(String path, Map tf) {
         //System.out.println(",,,,,,,,,,,,,");
@@ -157,11 +244,10 @@ public class TFIDFTEST{
         ArrayList list = new ArrayList();
         for (File f : floderdir) {
             // size = size+(int)f.length();
-            File[] childdir = f.listFiles();
-            for (File file : childdir) {
-                list.add(file);
 
-            }
+            list.add(f);
+
+
         }
         size = list.size();
         File[] fdir = new File[size];
@@ -180,7 +266,6 @@ public class TFIDFTEST{
             List list = map.get(key);
             double hasCount = (double) list.size();
             double idf = DCOUNT / hasCount;
-
             idfDic.put(key, idf);
         }
 
@@ -206,6 +291,14 @@ public class TFIDFTEST{
 
     }
 
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+        Map<K, V> result = new LinkedHashMap<>();
+        Stream<Map.Entry<K, V>> st = map.entrySet().stream();
+
+        st.sorted(Comparator.comparing(e -> e.getValue())).forEach(e -> result.put(e.getKey(), e.getValue()));
+
+        return result;
+    }
 
     public void toLibData() throws IOException// 转化成libsvm格式；
 
@@ -226,10 +319,12 @@ public class TFIDFTEST{
          * System.out.println("worddic add"+word); }
          */
         String vsm = "";
+        String num = "";
         for (String filename : TFIDFdic.keySet()) {
             String lable = new File(filename).getParentFile().getName();
             Map map = TFIDFdic.get(filename);// 获取某片文章对应的tfidf
             vsm = vsm + lable + " ";
+
             for (int i = 0; i < wordList.size(); i++) {
 
                 // System.out.println( "map.."+ map.size());
@@ -238,15 +333,18 @@ public class TFIDFTEST{
                 // System.out.println("temp"+ temp);
                 String temp = (String) wordList.get(i);
                 if (map.containsKey(temp)) {
-                    vsm = vsm + i + ":" + map.get(temp) + " ";
-                    // System.out.println(filename + "...." + temp + "...."+
-                    // map.get(temp) + "...");
+                    vsm = vsm + temp + ":" + map.get(temp) + " ";
+                    num = String.format("%.5f",(Double)map.get(temp))+" ";
+                    System.out.println(filename + "...." + temp + "...."+
+                            map.get(temp) + "...");
                 }
             }
             count++;
             vsm = vsm + "\n";
-            bw.write(vsm);
+            //        bw.write(vsm); key+value
+            bw.write(num); //only value
             vsm = "";
+            num = "";
             System.out.println("format" + "  " + count + " " + filename);
         }
         System.out.println("begin output");
